@@ -1,0 +1,16 @@
+# Ignore build generated files
+build/
+dist/
+dist.zip
+
+# Ignore waf lock file
+.lock-waf*
+
+# Ignore installed node modules
+node_modules/
+
+# Local scratch
+tmp-scaffold/
+tools/_dl/
+*.pyc
+.DS_Store

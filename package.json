@@ -1,0 +1,97 @@
+{
+  "name": "jeep-trails",
+  "author": "TechJeeper",
+  "version": "1.0.0",
+  "keywords": [
+    "pebble-app"
+  ],
+  "private": true,
+  "dependencies": {
+    "@rebble/clay": "^1.1.0"
+  },
+  "pebble": {
+    "displayName": "Jeep Trails",
+    "uuid": "8c62e433-e456-4cf7-b40c-82596b92a8a2",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "emery",
+      "gabbro"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "capabilities": [
+      "configurable"
+    ],
+    "messageKeys": [
+      "TextColor",
+      "ShowDate",
+      "AnimationsEnabled",
+      "SceneMode",
+      "FixedScene",
+      "DriveMinute",
+      "VibrateOnDrive",
+      "UseBoldTime"
+    ],
+    "resources": {
+      "media": [
+        {
+          "type": "bitmap",
+          "name": "SCENE_DESERT",
+          "file": "images/scene_desert.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_FOREST",
+          "file": "images/scene_forest.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_MOUNTAIN",
+          "file": "images/scene_mountain.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_BEACH",
+          "file": "images/scene_beach.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_SNOW",
+          "file": "images/scene_snow.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_FARM",
+          "file": "images/scene_farm.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_MOAB",
+          "file": "images/scene_moab.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "JEEP_0",
+          "file": "images/jeep_0.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "JEEP_1",
+          "file": "images/jeep_1.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "JEEP_2",
+          "file": "images/jeep_2.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "JEEP_3",
+          "file": "images/jeep_3.png"
+        }
+      ]
+    }
+  }
+}
