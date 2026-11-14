@@ -31,7 +31,9 @@ typedef struct {
 
 static Window *s_window;
 static Layer *s_canvas;
+static TextLayer *s_time_shadow;
 static TextLayer *s_time_layer;
+static TextLayer *s_date_shadow;
 static TextLayer *s_date_layer;
 
 static GBitmap *s_scene_bitmap;
@@ -281,13 +283,17 @@ static void update_clock(struct tm *t) {
       memmove(s_time_buf, s_time_buf + 1, strlen(s_time_buf));
     }
   }
+  text_layer_set_text(s_time_shadow, s_time_buf);
   text_layer_set_text(s_time_layer, s_time_buf);
 
   if (s_settings.show_date) {
     strftime(s_date_buf, sizeof(s_date_buf), "%a %b %e", t);
+    text_layer_set_text(s_date_shadow, s_date_buf);
     text_layer_set_text(s_date_layer, s_date_buf);
+    layer_set_hidden(text_layer_get_layer(s_date_shadow), false);
     layer_set_hidden(text_layer_get_layer(s_date_layer), false);
   } else {
+    layer_set_hidden(text_layer_get_layer(s_date_shadow), true);
     layer_set_hidden(text_layer_get_layer(s_date_layer), true);
   }
 
@@ -296,16 +302,20 @@ static void update_clock(struct tm *t) {
   if (gcolor_equal(text, GColorClear)) {
     text = GColorWhite;
   }
-  /* Night/default: keep configured color; morning can use dark text if white-ish sky */
+  /* Morning: prefer dark text on bright sky when using the default white. */
   if (tod == TOD_MORNING && gcolor_equal(s_settings.text_color, GColorWhite)) {
     text = GColorBlack;
   }
+  GColor shadow = gcolor_equal(text, GColorBlack) ? GColorWhite : GColorBlack;
+  text_layer_set_text_color(s_time_shadow, shadow);
   text_layer_set_text_color(s_time_layer, text);
+  text_layer_set_text_color(s_date_shadow, shadow);
   text_layer_set_text_color(s_date_layer, text);
 
-  text_layer_set_font(s_time_layer,
-                      fonts_get_system_font(s_settings.use_bold_time ? FONT_KEY_BITHAM_42_BOLD
-                                                                     : FONT_KEY_BITHAM_42_LIGHT));
+  GFont time_font = fonts_get_system_font(s_settings.use_bold_time ? FONT_KEY_BITHAM_42_BOLD
+                                                                     : FONT_KEY_BITHAM_42_LIGHT);
+  text_layer_set_font(s_time_shadow, time_font);
+  text_layer_set_font(s_time_layer, time_font);
 }
 
 static void drive_timer_cb(void *context) {
@@ -417,18 +427,26 @@ static void apply_text_layout(GRect bounds) {
 #ifdef PBL_ROUND
   int time_y = bounds.size.h * 12 / 100;
   int date_y = time_y + 46;
-  text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
-  text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
-  layer_set_frame(text_layer_get_layer(s_time_layer), GRect(18, time_y, bounds.size.w - 36, 50));
-  layer_set_frame(text_layer_get_layer(s_date_layer), GRect(24, date_y, bounds.size.w - 48, 24));
+  int time_x = 18;
+  int date_x = 24;
+  int time_w = bounds.size.w - 36;
+  int date_w = bounds.size.w - 48;
 #else
   int time_y = 8;
   int date_y = 54;
-  text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
-  text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
-  layer_set_frame(text_layer_get_layer(s_time_layer), GRect(0, time_y, bounds.size.w, 50));
-  layer_set_frame(text_layer_get_layer(s_date_layer), GRect(0, date_y, bounds.size.w, 24));
+  int time_x = 0;
+  int date_x = 0;
+  int time_w = bounds.size.w;
+  int date_w = bounds.size.w;
 #endif
+  text_layer_set_text_alignment(s_time_shadow, GTextAlignmentCenter);
+  text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
+  text_layer_set_text_alignment(s_date_shadow, GTextAlignmentCenter);
+  text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
+  layer_set_frame(text_layer_get_layer(s_time_shadow), GRect(time_x + 1, time_y + 1, time_w, 50));
+  layer_set_frame(text_layer_get_layer(s_time_layer), GRect(time_x, time_y, time_w, 50));
+  layer_set_frame(text_layer_get_layer(s_date_shadow), GRect(date_x + 1, date_y + 1, date_w, 24));
+  layer_set_frame(text_layer_get_layer(s_date_layer), GRect(date_x, date_y, date_w, 24));
 }
 
 static void window_load(Window *window) {
@@ -441,11 +459,23 @@ static void window_load(Window *window) {
   layer_set_update_proc(s_canvas, canvas_update);
   layer_add_child(root, s_canvas);
 
+  s_time_shadow = text_layer_create(GRect(1, 9, bounds.size.w, 50));
+  text_layer_set_background_color(s_time_shadow, GColorClear);
+  text_layer_set_text_color(s_time_shadow, GColorBlack);
+  text_layer_set_font(s_time_shadow, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
+  layer_add_child(root, text_layer_get_layer(s_time_shadow));
+
   s_time_layer = text_layer_create(GRect(0, 8, bounds.size.w, 50));
   text_layer_set_background_color(s_time_layer, GColorClear);
   text_layer_set_text_color(s_time_layer, GColorWhite);
   text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
   layer_add_child(root, text_layer_get_layer(s_time_layer));
+
+  s_date_shadow = text_layer_create(GRect(1, 55, bounds.size.w, 24));
+  text_layer_set_background_color(s_date_shadow, GColorClear);
+  text_layer_set_text_color(s_date_shadow, GColorBlack);
+  text_layer_set_font(s_date_shadow, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  layer_add_child(root, text_layer_get_layer(s_date_shadow));
 
   s_date_layer = text_layer_create(GRect(0, 54, bounds.size.w, 24));
   text_layer_set_background_color(s_date_layer, GColorClear);
@@ -481,7 +511,9 @@ static void window_unload(Window *window) {
     s_drive_timer = NULL;
   }
   layer_destroy(s_canvas);
+  text_layer_destroy(s_time_shadow);
   text_layer_destroy(s_time_layer);
+  text_layer_destroy(s_date_shadow);
   text_layer_destroy(s_date_layer);
   if (s_scene_bitmap) {
     gbitmap_destroy(s_scene_bitmap);
