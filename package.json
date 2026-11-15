@@ -1,7 +1,7 @@
 {
   "name": "jeep-trails",
   "author": "TechJeeper",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "keywords": [
     "pebble-app"
   ],
@@ -39,57 +39,134 @@
         {
           "type": "bitmap",
           "name": "SCENE_DESERT",
-          "file": "images/scene_desert.png"
+          "file": "images/scene_desert.png",
+          "targetPlatforms": ["emery"]
         },
         {
           "type": "bitmap",
           "name": "SCENE_FOREST",
-          "file": "images/scene_forest.png"
+          "file": "images/scene_forest.png",
+          "targetPlatforms": ["emery"]
         },
         {
           "type": "bitmap",
           "name": "SCENE_MOUNTAIN",
-          "file": "images/scene_mountain.png"
+          "file": "images/scene_mountain.png",
+          "targetPlatforms": ["emery"]
         },
         {
           "type": "bitmap",
           "name": "SCENE_BEACH",
-          "file": "images/scene_beach.png"
+          "file": "images/scene_beach.png",
+          "targetPlatforms": ["emery"]
         },
         {
           "type": "bitmap",
           "name": "SCENE_SNOW",
-          "file": "images/scene_snow.png"
+          "file": "images/scene_snow.png",
+          "targetPlatforms": ["emery"]
         },
         {
           "type": "bitmap",
           "name": "SCENE_FARM",
-          "file": "images/scene_farm.png"
+          "file": "images/scene_farm.png",
+          "targetPlatforms": ["emery"]
         },
         {
           "type": "bitmap",
           "name": "SCENE_MOAB",
-          "file": "images/scene_moab.png"
+          "file": "images/scene_moab.png",
+          "targetPlatforms": ["emery"]
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_DESERT",
+          "file": "images/round/scene_desert.png",
+          "targetPlatforms": ["gabbro"]
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_FOREST",
+          "file": "images/round/scene_forest.png",
+          "targetPlatforms": ["gabbro"]
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_MOUNTAIN",
+          "file": "images/round/scene_mountain.png",
+          "targetPlatforms": ["gabbro"]
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_BEACH",
+          "file": "images/round/scene_beach.png",
+          "targetPlatforms": ["gabbro"]
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_SNOW",
+          "file": "images/round/scene_snow.png",
+          "targetPlatforms": ["gabbro"]
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_FARM",
+          "file": "images/round/scene_farm.png",
+          "targetPlatforms": ["gabbro"]
+        },
+        {
+          "type": "bitmap",
+          "name": "SCENE_MOAB",
+          "file": "images/round/scene_moab.png",
+          "targetPlatforms": ["gabbro"]
         },
         {
           "type": "bitmap",
           "name": "JEEP_0",
-          "file": "images/jeep_0.png"
+          "file": "images/jeep_0.png",
+          "targetPlatforms": ["emery"]
         },
         {
           "type": "bitmap",
           "name": "JEEP_1",
-          "file": "images/jeep_1.png"
+          "file": "images/jeep_1.png",
+          "targetPlatforms": ["emery"]
         },
         {
           "type": "bitmap",
           "name": "JEEP_2",
-          "file": "images/jeep_2.png"
+          "file": "images/jeep_2.png",
+          "targetPlatforms": ["emery"]
         },
         {
           "type": "bitmap",
           "name": "JEEP_3",
-          "file": "images/jeep_3.png"
+          "file": "images/jeep_3.png",
+          "targetPlatforms": ["emery"]
+        },
+        {
+          "type": "bitmap",
+          "name": "JEEP_0",
+          "file": "images/round/jeep_0.png",
+          "targetPlatforms": ["gabbro"]
+        },
+        {
+          "type": "bitmap",
+          "name": "JEEP_1",
+          "file": "images/round/jeep_1.png",
+          "targetPlatforms": ["gabbro"]
+        },
+        {
+          "type": "bitmap",
+          "name": "JEEP_2",
+          "file": "images/round/jeep_2.png",
+          "targetPlatforms": ["gabbro"]
+        },
+        {
+          "type": "bitmap",
+          "name": "JEEP_3",
+          "file": "images/round/jeep_3.png",
+          "targetPlatforms": ["gabbro"]
         }
       ]
     }

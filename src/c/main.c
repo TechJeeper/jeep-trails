@@ -5,8 +5,16 @@
 #define NUM_SCENES 7
 #define NUM_JEEP_FRAMES 4
 #define TERRAIN_SAMPLES 25
+/* Terrain tables are authored against the 200x228 emery art. */
+#define TERRAIN_SRC_W 200
+#define TERRAIN_SRC_H 228
+#ifdef PBL_ROUND
+#define JEEP_W 80
+#define JEEP_H 52
+#else
 #define JEEP_W 64
 #define JEEP_H 40
+#endif
 #define DRIVE_TICK_MS 80
 #define PERSIST_SETTINGS 1
 #define PERSIST_LAST_DRIVE_HOUR 2
@@ -51,10 +59,8 @@ static AppTimer *s_drive_timer;
 static int s_last_drive_hour = -1;
 static int s_bounds_w;
 static int s_bounds_h;
-/* Where the 200x228 scene is drawn (may be larger than the screen on round). */
+/* Exact on-screen rect used for the scene bitmap (1:1 blit, never scaled). */
 static GRect s_scene_dest;
-#define SCENE_ASSET_W 200
-#define SCENE_ASSET_H 228
 
 /* Terrain Y (road surface) sampled across asset width 200, for each scene. */
 static const uint8_t s_terrain[NUM_SCENES][TERRAIN_SAMPLES] = {
@@ -155,22 +161,18 @@ static void ensure_scene_loaded(int scene) {
   s_loaded_scene = scene;
 }
 
-/* Cover-scale 200x228 art into the display (fills round screens with no letterbox). */
-static GRect scene_dest_for_bounds(GRect bounds) {
-#ifdef PBL_ROUND
-  /* scale = max(bounds.w/200, bounds.h/228) using integer math */
-  int scale_w = (bounds.size.w * 1000) / SCENE_ASSET_W;
-  int scale_h = (bounds.size.h * 1000) / SCENE_ASSET_H;
-  int scale = scale_w > scale_h ? scale_w : scale_h;
-  int draw_w = (SCENE_ASSET_W * scale) / 1000;
-  int draw_h = (SCENE_ASSET_H * scale) / 1000;
-  /* Guarantees full cover even with rounding */
-  if (draw_w < bounds.size.w) draw_w = bounds.size.w;
-  if (draw_h < bounds.size.h) draw_h = bounds.size.h;
-  return GRect((bounds.size.w - draw_w) / 2, (bounds.size.h - draw_h) / 2, draw_w, draw_h);
-#else
-  return bounds;
-#endif
+/*
+ * Pebble does NOT scale bitmaps in graphics_draw_bitmap_in_rect — a larger
+ * dest rect tiles. Always blit 1:1 using the bitmap's native size.
+ */
+static GRect scene_dest_for_bitmap(GRect bounds, GBitmap *bmp) {
+  if (!bmp) {
+    return bounds;
+  }
+  GRect b = gbitmap_get_bounds(bmp);
+  int ox = (bounds.size.w - b.size.w) / 2;
+  int oy = (bounds.size.h - b.size.h) / 2;
+  return GRect(ox, oy, b.size.w, b.size.h);
 }
 
 static int terrain_y_at(int scene, int x) {
@@ -178,24 +180,23 @@ static int terrain_y_at(int scene, int x) {
   if (dest.size.w <= 1) {
     return s_bounds_h * 3 / 4;
   }
-  /* Map screen X into asset X via the scene dest rect. */
   int local_x = x - dest.origin.x;
   if (local_x < 0) local_x = 0;
   if (local_x >= dest.size.w) local_x = dest.size.w - 1;
-  int asset_x = (local_x * (SCENE_ASSET_W - 1)) / (dest.size.w > 1 ? dest.size.w - 1 : 1);
-  if (asset_x < 0) asset_x = 0;
-  if (asset_x > SCENE_ASSET_W - 1) asset_x = SCENE_ASSET_W - 1;
 
-  int idx = (asset_x * (TERRAIN_SAMPLES - 1)) / (SCENE_ASSET_W - 1);
+  /* Terrain samples are in original 200px-wide space. */
+  int src_x = (local_x * (TERRAIN_SRC_W - 1)) / (dest.size.w > 1 ? dest.size.w - 1 : 1);
+  int idx = (src_x * (TERRAIN_SAMPLES - 1)) / (TERRAIN_SRC_W - 1);
   int next = idx + 1;
   if (next >= TERRAIN_SAMPLES) next = TERRAIN_SAMPLES - 1;
-  int span = SCENE_ASSET_W - 1;
-  int frac = (asset_x * (TERRAIN_SAMPLES - 1)) % (span > 0 ? span : 1);
+  int span = TERRAIN_SRC_W - 1;
+  int frac = (src_x * (TERRAIN_SAMPLES - 1)) % (span > 0 ? span : 1);
   int y0 = s_terrain[scene][idx];
   int y1 = s_terrain[scene][next];
-  int asset_y = y0 + ((y1 - y0) * frac) / (span > 0 ? span : 1);
+  int src_y = y0 + ((y1 - y0) * frac) / (span > 0 ? span : 1);
 
-  return dest.origin.y + (asset_y * dest.size.h) / SCENE_ASSET_H;
+  /* Map 228-tall source samples onto the drawn scene height. */
+  return dest.origin.y + (src_y * dest.size.h) / TERRAIN_SRC_H;
 }
 
 static void draw_sky_overlay(GContext *ctx, GRect bounds, TimeOfDay tod) {
@@ -270,31 +271,23 @@ static void canvas_update(Layer *layer, GContext *ctx) {
 
   ensure_scene_loaded(scene);
 
-  s_scene_dest = scene_dest_for_bounds(bounds);
+  s_scene_dest = scene_dest_for_bitmap(bounds, s_scene_bitmap);
 
-  /* Match letterbox leftover to sky so round never shows black bars. */
-  GColor fill = GColorBlack;
-  if (tod == TOD_MORNING) fill = GColorPictonBlue;
-  else if (tod == TOD_DAY) fill = GColorPictonBlue;
-  else if (tod == TOD_EVENING) fill = GColorOxfordBlue;
-  graphics_context_set_fill_color(ctx, fill);
+  graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
   if (s_scene_bitmap) {
     graphics_context_set_compositing_mode(ctx, GCompOpSet);
+    /* Dest size MUST equal bitmap size or Pebble will tile. */
     graphics_draw_bitmap_in_rect(ctx, s_scene_bitmap, s_scene_dest);
   }
 
   draw_sky_overlay(ctx, bounds, tod);
 
   if (s_driving && s_jeep_frames[s_jeep_frame % NUM_JEEP_FRAMES]) {
-#ifdef PBL_ROUND
-    int jeep_w = (JEEP_W * s_scene_dest.size.w) / SCENE_ASSET_W;
-    int jeep_h = (JEEP_H * s_scene_dest.size.h) / SCENE_ASSET_H;
-#else
-    int jeep_w = JEEP_W;
-    int jeep_h = JEEP_H;
-#endif
+    GRect jeep_bounds = gbitmap_get_bounds(s_jeep_frames[s_jeep_frame % NUM_JEEP_FRAMES]);
+    int jeep_w = jeep_bounds.size.w;
+    int jeep_h = jeep_bounds.size.h;
     int road = terrain_y_at(scene, s_jeep_x + jeep_w / 2);
     int jeep_y = road - jeep_h + (jeep_h / 10);
     jeep_y += ((s_jeep_frame % 2) ? 1 : 0);
@@ -359,16 +352,9 @@ static void drive_timer_cb(void *context) {
   s_jeep_frame = (s_jeep_frame + 1) % NUM_JEEP_FRAMES;
   layer_mark_dirty(s_canvas);
 
-  {
-#ifdef PBL_ROUND
-    int jeep_w = (JEEP_W * (s_scene_dest.size.w > 0 ? s_scene_dest.size.w : s_bounds_w)) / SCENE_ASSET_W;
-#else
-    int jeep_w = JEEP_W;
-#endif
-    if (s_jeep_x > s_bounds_w + jeep_w) {
-      s_driving = false;
-      return;
-    }
+  if (s_jeep_x > s_bounds_w + JEEP_W) {
+    s_driving = false;
+    return;
   }
   s_drive_timer = app_timer_register(DRIVE_TICK_MS, drive_timer_cb, NULL);
 }
@@ -388,11 +374,7 @@ static void start_drive(struct tm *t) {
   settings_save();
 
   s_driving = true;
-#ifdef PBL_ROUND
-  s_jeep_x = -((JEEP_W * (s_bounds_w > 0 ? s_bounds_w : 260)) / SCENE_ASSET_W);
-#else
   s_jeep_x = -JEEP_W;
-#endif
   s_jeep_frame = 0;
   if (s_settings.vibrate_on_drive) {
     vibes_short_pulse();
