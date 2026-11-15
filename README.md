@@ -8,12 +8,15 @@ Graphics were generated with [PixelLab](https://pixellab.ai).
 
 ## Screenshots
 
-| Time 2 | Round 2 |
-| --- | --- |
-| ![Desert day](screenshots/emery_day.png) | ![Beach day](screenshots/gabbro_day.png) |
-| ![Forest evening drive](screenshots/emery_evening_drive.png) | ![Snow night](screenshots/gabbro_night.png) |
+Appstore device shots (exact sizes, unframed) live in `screenshots/store/`:
 
-More: `screenshots/emery_night.png`, `screenshots/emery_morning_drive.png`.
+| Time 2 (200×228) | Round 2 (260×260) |
+| --- | --- |
+| ![Desert day](screenshots/store/emery_01_desert_day.png) | ![Desert day](screenshots/store/gabbro_01_desert_day.png) |
+| ![Forest evening](screenshots/store/emery_02_forest_evening.png) | ![Forest evening](screenshots/store/gabbro_02_forest_evening.png) |
+| ![Moab night](screenshots/store/emery_04_moab_night.png) | ![Moab night](screenshots/store/gabbro_04_moab_night.png) |
+
+Regenerate with `python tools/generate_store_screenshots.py`. See `STORE.md` for the full upload list and banners.
 
 ## Features
 
